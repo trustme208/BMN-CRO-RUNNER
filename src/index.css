@@ -1,3 +1,0 @@
-/* Minimal reset so Tailwind will work in dev builds; you can expand */
-html, body, #root { height: 100%; }
-* { box-sizing: border-box; }
