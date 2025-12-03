@@ -1,8 +1,5 @@
 import { kv } from "@vercel/kv";
-import { Client } from "@upstash/qstash";
 import type { VercelRequest, VercelResponse } from "@vercel/node";
-
-const qstash = new Client({ token: process.env.QSTASH_TOKEN });
 
 function kvEnvMissing() {
   return !process.env.KV_REST_API_URL || !process.env.KV_REST_API_TOKEN;
@@ -57,20 +54,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       // Save user data
       await kv.set(`user:${wallet}`, existing);
 
-<<<<<<< HEAD
-      // Use QStash to update leaderboard asynchronously
-      await qstash.publishJSON({
-        url: `${process.env.VERCEL_URL || "http://localhost:3000"}/api/update-leaderboard`,
-        body: {
-          wallet: existing.wallet,
-          username: existing.username,
-          score: existing.score,
-          tokens: existing.tokens,
-        },
-      });
-
-=======
-      // Update global leaderboard
+      // Update global leaderboard directly
       let leaderboard = (await kv.get("leaderboard")) || [];
       if (!Array.isArray(leaderboard)) leaderboard = [];
 
@@ -91,7 +75,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
       await kv.set("leaderboard", leaderboard);
 
->>>>>>> 8363097297ccb9fe35da9eb1f2ace542605054ca
       return res.status(200).json(existing);
     }
 
