@@ -12,6 +12,13 @@ interface UserData {
   tokens: number;
 }
 
+interface LeaderboardEntry {
+  wallet: string;
+  username: string | null;
+  score: number;
+  tokens: number;
+}
+
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (kvEnvMissing()) {
     console.error(
@@ -57,11 +64,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
       await kv.set(`user:${wallet}`, existing);
 
-      const data = await kv.get<LeaderboardEntry[]>("leaderboard");
-      let leaderboard = Array.isArray(data) ? data : [];
+      // Update leaderboard synchronously
+      let leaderboard = Array.isArray(await kv.get<LeaderboardEntry[]>("leaderboard")) 
+        ? await kv.get<LeaderboardEntry[]>("leaderboard")
+        : [];
 
       leaderboard = leaderboard.filter((entry) => entry.wallet !== wallet);
-
       leaderboard.push({
         wallet: existing.wallet,
         username: existing.username,
@@ -70,9 +78,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       });
 
       leaderboard.sort((a, b) => b.score - a.score);
-      leaderboard = leaderboard.slice(0, 100);
-
-      await kv.set("leaderboard", leaderboard);
+      await kv.set("leaderboard", leaderboard.slice(0, 100));
 
       return res.status(200).json(existing);
     }
@@ -82,11 +88,4 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     console.error("User API error:", err);
     return res.status(500).json({ error: "internal server error" });
   }
-}
-
-interface LeaderboardEntry {
-  wallet: string;
-  username: string | null;
-  score: number;
-  tokens: number;
 }
