@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0,maximum-scale=1.0,user-scalable=no" />
+    <title>Black Moon Runner</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              cronos: { dark: '#0B0B19', blue: '#002D74', glow: '#00A3FF', accent: '#CDCED6' },
+              bmn: { black: '#000000', gold: '#F0B90B', neon: '#9945FF' }
+            },
+            fontFamily: { mono: ['ui-monospace','SFMono-Regular','Menlo','Monaco','Consolas','monospace'] },
+            animation: { 'pulse-fast': 'pulse 1s cubic-bezier(0.4,0,0.6,1) infinite' }
+          }
+        }
+      }
+    </script>
+    <style>
+      body { margin: 0; overflow: hidden; background-color: #0B0B19; touch-action: none; }
+      canvas { display: block; }
+    </style>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
