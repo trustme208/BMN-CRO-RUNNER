@@ -14,8 +14,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   try {
-    let leaderboard = await kv.get<LeaderboardEntry[]>("leaderboard");
-    if (!Array.isArray(leaderboard)) leaderboard = [];
+    const data = await kv.get<LeaderboardEntry[]>("leaderboard");
+    let leaderboard = Array.isArray(data) ? data : [];
 
     leaderboard = leaderboard.filter(
       (entry): entry is LeaderboardEntry =>
