@@ -5,6 +5,13 @@ function kvEnvMissing() {
   return !process.env.KV_REST_API_URL || !process.env.KV_REST_API_TOKEN;
 }
 
+interface UserData {
+  wallet: string;
+  username: string | null;
+  score: number;
+  tokens: number;
+}
+
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (kvEnvMissing()) {
     console.error(
@@ -23,45 +30,38 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   try {
     if (req.method === "GET") {
-      const data = await kv.get(`user:${wallet}`);
+      const data = await kv.get<UserData>(`user:${wallet}`);
       return res.status(200).json(
         data || { wallet, username: null, score: 0, tokens: 0 }
       );
     }
 
     if (req.method === "POST") {
-      // Defensive: ensure req.body is an object
       const body = typeof req.body === "object" && req.body ? req.body : {};
 
-      const existing = (await kv.get(`user:${wallet}`)) || {
+      const existing = ((await kv.get<UserData>(`user:${wallet}`)) || {
         wallet,
         username: null,
         score: 0,
         tokens: 0,
-      };
+      }) as UserData;
 
-      // Save username
       if (body.username) {
         existing.username = body.username;
       }
 
-      // Update score & tokens (take highest score)
       if (typeof body.score === "number") {
         existing.score = Math.max(existing.score, body.score);
         existing.tokens = (existing.tokens || 0) + (body.tokens || 0);
       }
 
-      // Save user data
       await kv.set(`user:${wallet}`, existing);
 
-      // Update global leaderboard directly
-      let leaderboard = (await kv.get("leaderboard")) || [];
+      let leaderboard = (await kv.get<UserData[]>("leaderboard")) || [];
       if (!Array.isArray(leaderboard)) leaderboard = [];
 
-      // Remove old entry for this wallet
-      leaderboard = leaderboard.filter((entry: any) => entry.wallet !== wallet);
+      leaderboard = leaderboard.filter((entry) => entry.wallet !== wallet);
 
-      // Add updated entry
       leaderboard.push({
         wallet: existing.wallet,
         username: existing.username,
@@ -69,8 +69,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         tokens: existing.tokens,
       });
 
-      // Sort and keep top 100
-      leaderboard.sort((a: any, b: any) => b.score - a.score);
+      leaderboard.sort((a, b) => b.score - a.score);
       leaderboard = leaderboard.slice(0, 100);
 
       await kv.set("leaderboard", leaderboard);
