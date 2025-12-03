@@ -57,6 +57,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       // Save user data
       await kv.set(`user:${wallet}`, existing);
 
+<<<<<<< HEAD
       // Use QStash to update leaderboard asynchronously
       await qstash.publishJSON({
         url: `${process.env.VERCEL_URL || "http://localhost:3000"}/api/update-leaderboard`,
@@ -68,6 +69,29 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         },
       });
 
+=======
+      // Update global leaderboard
+      let leaderboard = (await kv.get("leaderboard")) || [];
+      if (!Array.isArray(leaderboard)) leaderboard = [];
+
+      // Remove old entry for this wallet
+      leaderboard = leaderboard.filter((entry: any) => entry.wallet !== wallet);
+
+      // Add updated entry
+      leaderboard.push({
+        wallet: existing.wallet,
+        username: existing.username,
+        score: existing.score,
+        tokens: existing.tokens,
+      });
+
+      // Sort and keep top 100
+      leaderboard.sort((a: any, b: any) => b.score - a.score);
+      leaderboard = leaderboard.slice(0, 100);
+
+      await kv.set("leaderboard", leaderboard);
+
+>>>>>>> 8363097297ccb9fe35da9eb1f2ace542605054ca
       return res.status(200).json(existing);
     }
 
